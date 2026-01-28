@@ -1,0 +1,10 @@
+{
+	"require": {
+		"php": "8.0.30",
+		"slim/slim": "4.*",
+		"slim/psr7":"^1.6"
+	},
+	"autoload": {
+		"classmap": ["piramide-uploader"]
+	}
+} 
