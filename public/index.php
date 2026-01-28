@@ -49,7 +49,6 @@ $app->post("/productos", function (Request $request, Response $response) {
 		':imagen' => $json['imagen'],
 	]);
 	$pdo->exec($sql);
-
 });
 
 // $app->get("/probando", function() 	use($app){
