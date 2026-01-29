@@ -11,6 +11,7 @@ $app = AppFactory::create();
 $app->setBasePath('/curso-angular4-backend');
 
 //Middleware para detectar errores 
+$app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 // $db = new mysqli('localhost', 'root', '', 'curso_angular4');
@@ -35,20 +36,25 @@ $app->get("/pruebas", function (Request $request, Response $response) {
 	return $response->withHeader('Content-Type', 'application/json');
 });
 
-$app->post("/productos", function (Request $request, Response $response) {
-	$json = $request->getParsedBody(); //Aquí lo decodifica de una vez, es como hacer json_decode()
+$app->post("/productos", function (Request $request, Response $response, array $args) {
+	$body = $request->getParsedBody(); //Aquí lo decodifica de una vez, es como hacer json_decode()
 	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', ''); //Ajustamos el PDO que es la conexión a la base de datos
-	$sql = "INSERT INTO productos(nombre, description, precio, imagen) VALUES (:nombre, :description, :precio, :imagen)"; //Creamos la consulta a la base de datos
+	$sql = "INSERT INTO productos (nombre, description, precio, imagen) VALUES (:nombre, :description, :precio, :imagen)"; //Creamos la consulta a la base de datos
 	//En este caso con :valor para evitar que haya perdidas de datos con Inyección SQL
 
 	$statement = $pdo->prepare($sql); //Prepara la sentencia SQL 
 	$statement->execute([
-		':nombre' => $json['nombre'],
-		':description' => $json['description'],
-		':precio' => $json['precio'],
-		':imagen' => $json['imagen'],
+		':nombre' => $body['nombre'],
+		':description' => $body['description'],
+		':precio' => $body['precio'],
+		':imagen' => $body['imagen']
 	]);
-	$pdo->exec($sql);
+	$result = ['status' => 'error', 'code' => 400, 'message' => 'El producto no ha sido creado.'];
+	if($statement->rowCount() > 0) {
+		$result = ['status' => 'success', 'code' => 200, 'message' => 'Producto creado exitosamente.'];
+	}
+	$response->getBody()->write(json_encode($body));
+	return $response->withHeader('Content-Type', 'application/json');
 });
 
 // $app->get("/probando", function() 	use($app){
