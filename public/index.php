@@ -36,8 +36,23 @@ $app->get("/pruebas", function (Request $request, Response $response) {
 	return $response->withHeader('Content-Type', 'application/json');
 });
 
+
+//Guardar productos 
+
 $app->post("/productos", function (Request $request, Response $response, array $args) {
 	$body = $request->getParsedBody(); //Aquí lo decodifica de una vez, es como hacer json_decode()
+	if (!isset($body['nombre'])) {
+		$body['nombre'] = null;
+	}
+	if (!isset($body['description'])) {
+		$body['description'] = null;
+	}
+	if (!isset($body['precio'])) {
+		$body['precio'] = null;
+	}
+	if (!isset($body['imagen'])) {
+		$body['imagen'] = null;
+	}
 	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', ''); //Ajustamos el PDO que es la conexión a la base de datos
 	$sql = "INSERT INTO productos (nombre, description, precio, imagen) VALUES (:nombre, :description, :precio, :imagen)"; //Creamos la consulta a la base de datos
 	//En este caso con :valor para evitar que haya perdidas de datos con Inyección SQL
@@ -50,13 +65,162 @@ $app->post("/productos", function (Request $request, Response $response, array $
 		':imagen' => $body['imagen']
 	]);
 	$result = ['status' => 'error', 'code' => 400, 'message' => 'El producto no ha sido creado.'];
-	if($statement->rowCount() > 0) {
+	if ($statement->rowCount() > 0) {
 		$result = ['status' => 'success', 'code' => 200, 'message' => 'Producto creado exitosamente.'];
 	}
-	$response->getBody()->write(json_encode($body));
+	$response->getBody()->write(json_encode($result));
 	return $response->withHeader('Content-Type', 'application/json');
 });
 
+
+//Listar todos los productos
+
+$app->get('/productos', function (Request $request, Response $response, array $args) {
+
+	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', ''); //Ajustamos el PDO que es la conexión a la base de datos
+	$sql = 'SELECT * FROM productos ORDER BY id DESC';
+
+	$statement = $pdo->prepare($sql);
+	$statement->execute();
+
+	$data = $statement->fetchAll(PDO::FETCH_ASSOC);
+	$result = ['status' => 'error', 'code' => 400, 'message' => 'No se ha podido realizar la lista de productos.', 'data' => $data];
+	if ($statement->rowCount() > 0) {
+		$result = ['status' => 'success', 'code' => 200, 'message' => 'Lista de productos hecha exitosamente.', 'data' => $data];
+	}
+	$response->getBody()->write(json_encode($result));
+	return $response->withHeader('Content-Type', 'application/json');
+});
+
+//Devolver un solo producto
+
+$app->get('/producto/{id}', function (Request $request, Response $response, array $args) {
+	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', '');
+	$sql = 'SELECT * FROM productos WHERE id = :id';
+	echo $args['id'];
+	$statement = $pdo->prepare($sql);
+	$statement->execute([
+		':id' => $args['id']
+	]);
+	$data = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+	$result = ['status' => 'error', 'code' => 400, 'message' => 'No se ha encontrado el producto.', 'data' => $data];
+	if ($statement->rowCount() > 0) {
+		$result = ['status' => 'success', 'code' => 200, 'message' => 'Producto encontrado con exito.', 'data' => $data];
+	}
+	$response->getBody()->write(json_encode($result));
+	return $response->withHeader('Content-Type', 'application/json');
+});
+
+
+//Eliminar un producto
+
+$app->get('/delete-producto/{id}', function (Request $request, Response $response, array $args) {
+	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', '');
+	$sql = 'DELETE FROM productos WHERE id = :id';
+	echo $args['id'];
+	$statement = $pdo->prepare($sql);
+	$statement->execute([
+		':id' => $args['id']
+	]);
+	$data = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+	$result = ['status' => 'error', 'code' => 400, 'message' => 'No se ha eliminado el producto.'];
+	if ($statement->rowCount() > 0) {
+		$result = ['status' => 'success', 'code' => 200, 'message' => 'El producto se ha eliminado exitosamente.'];
+	}
+	$response->getBody()->write(json_encode($result));
+	return $response->withHeader('Content-Type', 'application/json');
+});
+
+//Actualizar un producto
+
+$app->post('/update-producto/{id}', function (Request $request, Response $response, array $args) {
+	$body = $request->getParsedBody();
+	if (!isset($body['nombre'])) {
+		$body['nombre'] = null;
+	}
+	if (!isset($body['description'])) {
+		$body['description'] = null;
+	}
+	if (!isset($body['precio'])) {
+		$body['precio'] = null;
+	}
+	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', '');
+	$sql = 'UPDATE productos SET nombre = :nombre, description = :description,';
+	if (isset($body['imagen'])) {
+		$sql .= 'imagen = :imagen, ';
+	}
+	$sql .= ' precio = :precio WHERE id = :id';
+
+	$statement = $pdo->prepare($sql);
+	$statement->execute([
+		':nombre' => $body['nombre'],
+		':description' => $body['description'],
+		':precio' => $body['precio'],
+		':imagen' => $body['imagen'],
+		':id' => $args['id']
+	]);
+
+	$result = ['status' => 'error', 'code' => 400, 'message' => 'El producto no ha sido actualizado.'];
+	if ($statement->rowCount() > 0) {
+		$result = ['status' => 'success', 'code' => 200, 'message' => 'El producto se ha actualizado exitosamente.'];
+	}
+	$response->getBody()->write(json_encode($result));
+	return $response->withHeader('Content-Type', 'application/json');
+});
+
+//Subir imagen a un producto
+
+$app->post('/upload-file', function (Request $request, Response $response) {
+
+	if (isset($_FILES['uploads'])) {
+
+		$piramedeUploader = new PiramideUploader();
+
+		$uploaded = $piramedeUploader->upload(
+			'img',
+			'uploads',
+			'uploads',
+			['image/jpeg', 'image/png', 'image/gif']
+		);
+
+		if (isset($uploaded) && $uploaded['uploaded'] == false) {
+			$result = ['status' => 'error', 'code' => 400, 'message' => 'No se subió la imagen'];
+		} else {
+			$file = $piramedeUploader->getInfoFile();
+
+			$result = [
+				'status' => 'success',
+				'code' => 200,
+				'message' => 'Imagen subida correctamente',
+				'file' => $file
+			];
+		}
+	}
+
+	$response->getBody()->write(json_encode($result));
+	return $response->withHeader('Content-Type', 'application/json');
+});
+
+// $app->post('/upload-file', function (Request $request, Response $response, array $args) {
+
+// 	if (isset($_FILES['uploads'])) {
+// 		$piramideUploader = new PiramideUploader();
+// 		$upload = $piramideUploader->upload('uploads', 'uploads', 'uploads', ['image/jpeg', 'image/png', 'image/gif']);
+// 		$file = $piramideUploader->getInfoFile();
+// 		$fileName = $file['complete_name'];
+// 		if (isset($upload) && $upload['uploaded'] == false) {
+// 			$result = ['status' => 'error', 'code' => 404, 'message' => 'La imagen no fué subida.', 'file' => $file];
+// 		} else {
+// 			$result = ['status' => 'success', 'code' => 200, 'message' => 'La imagen ha sido subido exitosamente.', 'file' => $fileName];
+// 		}
+// 		// var_dump($_FILES);
+// 		// die();
+// 		$response->getBody()->write(json_encode($result));
+// 	}
+// 	return $response->withHeader('Content-Type', 'application/json');
+// });
 // $app->get("/probando", function() 	use($app){
 // 	echo "OTRO TEXTO CUALQUIERA";
 // });
