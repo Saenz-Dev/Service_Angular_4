@@ -1,5 +1,5 @@
 <?php
-z
+
 class PiramideUploader {
 
 	private $info_file;
@@ -17,12 +17,12 @@ class PiramideUploader {
 			"size"			=> $_FILES[$file]["size"],
 			"error"			=> $_FILES[$file]["error"]
 		);
-
+		// var_dump($this->info_file);
 		if ($force_name != NULL) {
 			$this->info_file["complete_name"] = $name;
 		}
-
-		if (is_uploaded_file($this->info_file["temporal_name"])) {
+		// // echo $this->info_file["temporal_name"];
+		// if (is_uploaded_file($this->info_file['temporal_name'][0])) {
 			if (is_array($types_allowed) && in_array($this->info_file["type"], $types_allowed)) {
 
 				if(!is_dir($directory)){
@@ -49,10 +49,10 @@ class PiramideUploader {
 				$uploaded = false;
 				$error = "The type of file to be uploaded is not allowed";
 			}
-		} else {
-			$uploaded = false;
-			$error = "The file has not been uploaded";
-		}
+		// } else {
+		// 	$uploaded = false;
+		// 	$error = "The file has not been uploaded";
+		// }
 		
 		$response = array("uploaded" => $uploaded, "error" => null);
 		
