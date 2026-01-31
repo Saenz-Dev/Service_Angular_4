@@ -181,7 +181,7 @@ $app->post('/upload-file', function (Request $request, Response $response) {
 		$uploaded = $piramedeUploader->upload(
 			'img',
 			'uploads',
-			'uploads',
+			'../uploads',
 			['image/jpeg', 'image/png', 'image/gif']
 		);
 

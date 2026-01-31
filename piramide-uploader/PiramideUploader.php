@@ -18,9 +18,9 @@ class PiramideUploader {
 			"error"			=> $_FILES[$file]["error"]
 		);
 		// var_dump($this->info_file);
-		if ($force_name != NULL) {
-			$this->info_file["complete_name"] = $name;
-		}
+		// if ($force_name != NULL) {
+		// 	$this->info_file["complete_name"] = $name;
+		// }
 		// // echo $this->info_file["temporal_name"];
 		// if (is_uploaded_file($this->info_file['temporal_name'][0])) {
 			if (is_array($types_allowed) && in_array($this->info_file["type"], $types_allowed)) {
