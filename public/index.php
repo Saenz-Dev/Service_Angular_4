@@ -97,7 +97,7 @@ $app->get('/productos', function (Request $request, Response $response, array $a
 $app->get('/producto/{id}', function (Request $request, Response $response, array $args) {
 	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', '');
 	$sql = 'SELECT * FROM productos WHERE id = :id';
-	echo $args['id'];
+	// echo $args['id'];
 	$statement = $pdo->prepare($sql);
 	$statement->execute([
 		':id' => $args['id']
@@ -118,7 +118,7 @@ $app->get('/producto/{id}', function (Request $request, Response $response, arra
 $app->get('/delete-producto/{id}', function (Request $request, Response $response, array $args) {
 	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', '');
 	$sql = 'DELETE FROM productos WHERE id = :id';
-	echo $args['id'];
+	// echo $args['id'];
 	$statement = $pdo->prepare($sql);
 	$statement->execute([
 		':id' => $args['id']
@@ -149,18 +149,33 @@ $app->post('/update-producto/{id}', function (Request $request, Response $respon
 	$pdo = new PDO('mysql:dbname=curso_angular4;host=localhost;port=3013', 'root', '');
 	$sql = 'UPDATE productos SET nombre = :nombre, description = :description,';
 	if (isset($body['imagen'])) {
-		$sql .= 'imagen = :imagen, ';
+		if (!($body['imagen'] == '')) 	{
+			$sql .= 'imagen = :imagen, ';
+
+		}
 	}
 	$sql .= ' precio = :precio WHERE id = :id';
 
 	$statement = $pdo->prepare($sql);
-	$statement->execute([
-		':nombre' => $body['nombre'],
-		':description' => $body['description'],
-		':precio' => $body['precio'],
-		':imagen' => $body['imagen'],
-		':id' => $args['id']
-	]);
+	if (isset($body['imagen'])) {
+		if (!($body['imagen'] == '')) {
+			$statement->execute([
+				':nombre' => $body['nombre'],
+				':description' => $body['description'],
+				':precio' => $body['precio'],
+				':imagen' => $body['imagen'],
+				':id' => $args['id']
+			]);
+		}
+	} else {
+		$statement->execute([
+			':nombre' => $body['nombre'],
+			':description' => $body['description'],
+			':precio' => $body['precio'],
+			':id' => $args['id']
+		]);
+	}
+
 
 	$result = ['status' => 'error', 'code' => 400, 'message' => 'El producto no ha sido actualizado.'];
 	if ($statement->rowCount() > 0) {
